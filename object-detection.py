@@ -73,10 +73,11 @@ with detection_graph.as_default():
 
             # Testing class detection
             for i in range(min(20, np.squeeze(boxes).shape[0])):
-                if np.squeeze(classes).astype(np.int32)[i] in category_index.keys() and np.squeeze(scores)[i] > 0.5:
-                  class_name = category_index[np.squeeze(classes).astype(np.int32)[i]]['name']
-                  score_value = np.squeeze(scores)[i]
-                  print("{0} - {1:.2f}".format(class_name, score_value))
+                class_value = np.squeeze(classes).astype(np.int32)[i]
+                score_value = np.squeeze(scores)[i]
+                class_name = category_index[class_value]['name']
+                if class_value in category_index.keys() and score_value > 0.5:
+                    print("{0} - {1:.2f}".format(class_name, score_value))
 
             vis_util.visualize_boxes_and_labels_on_image_array(
                 image_np,

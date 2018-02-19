@@ -17,6 +17,9 @@
 *.rar
 *.tar
 *.zip
+*.MOV
+*.png
+*.record
 
 # Logs and databases #
 ######################
@@ -41,3 +44,4 @@ graph_def/
 research/
 research
 ssd*/
+train/
