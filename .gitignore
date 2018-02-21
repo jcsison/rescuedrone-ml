@@ -17,9 +17,6 @@
 *.rar
 *.tar
 *.zip
-*.MOV
-*.png
-*.record
 
 # Logs and databases #
 ######################
@@ -36,6 +33,18 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Miscellaneous #
+#################
+*.avi
+*.MOV
+*.png
+*.pb
+*.pyc
+*.record
+*.xml
+model.ckpt*
+checkpoint
 
 # Directory #
 #############
