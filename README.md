@@ -1,7 +1,8 @@
 # rescuedrone-ml
 Machine learning aspect of the Rescue Drone project.
 
-`object_detection_test.py` is used to test the object detection model on either a live camera feed or an input video. `object_detection.py` can also be used to write the video output to file.
+`object_detection_test.py` is used to test the object detection model on either a live camera feed or an input video. `object_detection_test.py` can also be used to write the video output to file.
+
 `create_tf_record.py` can be used to generate training record files for training.
 
 ## Requirements
