@@ -8,11 +8,10 @@ Machine learning aspect of the Rescue Drone project.
 ## Requirements
 - [Python 3.6](https://www.python.org/downloads/)
 - [Tensorflow 1.5](https://www.tensorflow.org/install/)
+- [Tensorflow Object Detection API](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md)
 
 ## Instructions
 ### Object Detection
-
-Follow [these steps](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md) to install the Tensorflow Object Detection API.
 
 Run the object detection test script using:
 
@@ -26,14 +25,14 @@ If `frozen_inference_graph.pb` is not found within the `data/` directory, this s
 
 ### Creating Training Records
 
-Start by placing images in `input/images/` and annotations in `input/annotations/`. Create `trainval.txt` by executing:
+Start by placing images in `input/images/` and annotations in `input/annotations/`. Create `trainval.txt` by executing the following command:
 
 ``` bash
 # From input/ directory
 ls images | grep ".png" | sed s/.png// > annotations/trainval.txt
 ```
 
-Training records can then be created by running the following command:
+Training records can then be created by running:
 
 ``` bash
 python3 create_tf_record.py --data_dir=data --output_dir=data
