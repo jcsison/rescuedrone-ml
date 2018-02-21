@@ -1,7 +1,7 @@
 # rescuedrone-ml
 Machine learning aspect of the Rescue Drone project.
 
-`object_detection_test.py` is used to test the object detection model on either a live camera feed or an input video. `object_detection_test.py` can also be used to write the video output to file.
+`object_detection_test.py` is used to test the object detection model on either a live camera feed or an input video. This script can also be used to write the video output to file.
 
 `create_tf_record.py` can be used to generate training record files for training.
 
@@ -12,7 +12,7 @@ Machine learning aspect of the Rescue Drone project.
 ## Instructions
 ### Object Detection
 
-Follow [these steps](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md) to install the Tensorflow Object Detection API
+Follow [these steps](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md) to install the Tensorflow Object Detection API.
 
 Run the object detection test script using:
 
@@ -21,6 +21,8 @@ python3 object_detection_test.py
 ```
 
 Note that within the script the `show` variable must be set to `True` to display the video output and the `write` variable must be set to `True` to write the video output to file.
+
+If `frozen_inference_graph.pb` is not found within the `data/` directory, this script will also automatically download and extract the default `ssd_mobilenet_v1_coco` training model.
 
 ### Creating Training Records
 
