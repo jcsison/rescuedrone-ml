@@ -7,7 +7,7 @@ Machine learning aspect of the Rescue Drone project.
 
 ## Requirements
 - [Python 3.6](https://www.python.org/downloads/)
-- [Tensorflow](https://www.tensorflow.org/install/)
+- [Tensorflow 1.5](https://www.tensorflow.org/install/)
 
 ## Instructions
 ### Object Detection
@@ -26,10 +26,17 @@ If `frozen_inference_graph.pb` is not found within the `data/` directory, this s
 
 ### Creating Training Records
 
-Create record files for training by placing images in `input/images/` and annotations in `input/annotations/` and executing:
+Start by placing images in `input/images/` and annotations in `input/annotations/`. Create `trainval.txt` by executing:
+
+``` bash
+# From input/ directory
+ls images | grep ".png" | sed s/.png// > annotations/trainval.txt
+```
+
+Training records can then be created by running the following command:
 
 ``` bash
 python3 create_tf_record.py --data_dir=data --output_dir=data
 ```
 
-Training records will be generated within the `data/` directory.
+Records will be generated within the `data/` directory.
