@@ -1,7 +1,8 @@
 # rescuedrone-ml
 Machine learning aspect of the Rescue Drone project.
-`object_detection.py` is used to test the object detection model on either a live camera feed or an input video. `object_detection.py` can also write the video output to file.
-`create_tf_record.py` is used to generate training record files for training.
+
+`object_detection_test.py` is used to test the object detection model on either a live camera feed or an input video. `object_detection.py` can also be used to write the video output to file.
+`create_tf_record.py` can be used to generate training record files for training.
 
 ## Requirements
 - [Python 3.6](https://www.python.org/downloads/)
@@ -12,20 +13,20 @@ Machine learning aspect of the Rescue Drone project.
 
 Follow [these steps](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md) to install the Tensorflow Object Detection API
 
-Run the object detection script using:
+Run the object detection test script using:
 
 ``` bash
 python3 object_detection_test.py
 ```
 
-Note that the `show` variable must be set to `True` to display the video output and that the `write` variable must be set to true to write the video output to file.
+Note that within the script the `show` variable must be set to `True` to display the video output and the `write` variable must be set to `True` to write the video output to file.
 
 ### Creating Training Records
 
-Generate record files for training by placing images in `input/images/` and annotations in `input/annotations/` and executing:
+Create record files for training by placing images in `input/images/` and annotations in `input/annotations/` and executing:
 
 ``` bash
 python3 create_tf_record.py --data_dir=data --output_dir=data
 ```
 
-Training records will be created within the `data/` directory.
+Training records will be generated within the `data/` directory.
