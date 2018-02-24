@@ -38,13 +38,14 @@ Thumbs.db
 #################
 *.avi
 *.MOV
-*.png
 *.pb
+*.png
 *.pyc
 *.record
 *.xml
-model.ckpt*
 checkpoint
+trainval.txt
+model.ckpt*
 
 # Directory #
 #############

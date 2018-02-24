@@ -23,9 +23,11 @@ write = False # set to True to write video output to file
 
 video_input = 'input/DJI_0014.MOV' # Replace with path of input file or with 0 for camera
 cap = cv2.VideoCapture(video_input)
+cap_width = int(cap.get(3))
+cap_height = int(cap.get(4))
 
 if write:
-    out = cv2.VideoWriter('output/output_{:%y%m%d_%H%M%S}.avi'.format(datetime.datetime.now()), cv2.VideoWriter_fourcc(*'XVID'), cap.get(5), (int(cap.get(3)), int(cap.get(4))))
+    out = cv2.VideoWriter('output/output_{:%y%m%d_%H%M%S}.avi'.format(datetime.datetime.now()), cv2.VideoWriter_fourcc(*'XVID'), cap.get(5), (cap_width, cap_height))
 
 MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
 MODEL_FILE = MODEL_NAME + '.tar.gz'
@@ -84,9 +86,11 @@ with detection_graph.as_default():
                 class_value = np.squeeze(classes).astype(np.int32)[i]
                 score_value = np.squeeze(scores)[i]
                 if class_value in category_index.keys():
+                    ymin, xmin, ymax, xmax = tuple(np.squeeze(boxes)[i].tolist())
                     class_name = category_index[class_value]['name']
                     if score_value > 0.25:
-                        print("{0} - {1:.2f}".format(class_name, score_value))
+                        center = (cap_width * (xmin + xmax) / 2, cap_height * (ymin + ymax) / 2)
+                        print('{0} @ {1:.0f}%: xmin = {2:.1f}, xmax = {3:.1f}, ymin = {4:.1f}, ymax = {5:.1f}, center = ({6:.1f}, {7:.1f})'.format(class_name, score_value * 100, xmin * cap_width, xmax * cap_width, ymin * cap_height, ymax * cap_height, center[0], center[1]))
 
             vis_util.visualize_boxes_and_labels_on_image_array(
                 image_np,

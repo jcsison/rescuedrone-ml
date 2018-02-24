@@ -21,7 +21,7 @@ python3 object_detection_test.py
 
 Note that within the script the `show` variable must be set to `True` to display the video output and the `write` variable must be set to `True` to write the video output to file.
 
-If `frozen_inference_graph.pb` is not found within the `data/` directory, this script will also automatically download and extract the default `ssd_mobilenet_v1_coco` training model.
+If `frozen_inference_graph.pb` is not found within the `data/` directory, this script will automatically download and extract the default `ssd_mobilenet_v1_coco` training model.
 
 ### Creating Training Records
 
