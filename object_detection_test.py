@@ -18,16 +18,33 @@ sys.path.append("./utils/")
 import label_map_util
 import visualization_utils as vis_util
 
+def angle(x, y):
+    if x != 0:
+        theta = np.rad2deg(abs(np.arctan(y / x)))
+    else:
+        theta = 90
+    if x < 0 and y >= 0:
+        theta = theta + 90
+    elif x < 0 and y < 0:
+        theta = theta + 180
+    elif x >= 0 and y < 0:
+        theta = theta + 270
+    return theta
+
 show = False # set to True to display the output
 write = False # set to True to write video output to file
+threshold = 0.5 # minimum object detection confidence to display
 
-video_input = 'input/DJI_0014.MOV' # Replace with path of input file or with 0 for camera
+# video_input = 'input/DJI_0014.MOV' # Replace with path of input file or with 0 for camera
+video_input = 0
 cap = cv2.VideoCapture(video_input)
 cap_width = int(cap.get(3))
 cap_height = int(cap.get(4))
 
 if write:
-    out = cv2.VideoWriter('output/output_{:%y%m%d_%H%M%S}.avi'.format(datetime.datetime.now()), cv2.VideoWriter_fourcc(*'XVID'), cap.get(5), (cap_width, cap_height))
+    out = cv2.VideoWriter('output/output_{:%y%m%d_%H%M%S}.avi'.format(
+        datetime.datetime.now()), cv2.VideoWriter_fourcc(*'XVID'), cap.get(5),
+        (cap_width, cap_height))
 
 MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
 MODEL_FILE = MODEL_NAME + '.tar.gz'
@@ -55,7 +72,8 @@ with detection_graph.as_default():
         tf.import_graph_def(od_graph_def, name='')
 
 label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
-categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
+categories = label_map_util.convert_label_map_to_categories(label_map,
+    max_num_classes=NUM_CLASSES, use_display_name=True)
 category_index = label_map_util.create_category_index(categories)
 
 def load_image_into_numpy_array(image):
@@ -70,6 +88,10 @@ with detection_graph.as_default():
     detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
     num_detections = detection_graph.get_tensor_by_name('num_detections:0')
     try:
+        x_curr, y_curr = 0, 0
+        x_prev2, y_prev2 = 0, 0
+        delta_x_curr, delta_y_curr = 0, 0
+        theta = 0
         while True:
             ret, image_np = cap.read()
             if not ret:
@@ -78,8 +100,8 @@ with detection_graph.as_default():
                 break
             image_np_expanded = np.expand_dims(image_np, axis=0)
             (boxes, scores, classes, num) = sess.run(
-                [detection_boxes, detection_scores, detection_classes, num_detections],
-                feed_dict={image_tensor: image_np_expanded})
+                [detection_boxes, detection_scores, detection_classes,
+                num_detections], feed_dict={image_tensor: image_np_expanded})
 
             # Testing class detection
             for i in range(min(20, np.squeeze(boxes).shape[0])):
@@ -88,9 +110,24 @@ with detection_graph.as_default():
                 if class_value in category_index.keys():
                     ymin, xmin, ymax, xmax = tuple(np.squeeze(boxes)[i].tolist())
                     class_name = category_index[class_value]['name']
-                    if score_value > 0.25:
-                        center = (cap_width * (xmin + xmax) / 2, cap_height * (ymin + ymax) / 2)
-                        print('{0} @ {1:.0f}%: xmin = {2:.1f}, xmax = {3:.1f}, ymin = {4:.1f}, ymax = {5:.1f}, center = ({6:.1f}, {7:.1f})'.format(class_name, score_value * 100, xmin * cap_width, xmax * cap_width, ymin * cap_height, ymax * cap_height, center[0], center[1]))
+                    if score_value > threshold:
+                        center = ((xmin + xmax) / 2, (ymin + ymax) / 2)
+                        x_prev, y_prev = x_curr, y_curr
+                        x_curr, y_curr = center[0], center[1]
+                        delta_x_prev, delta_y_prev = delta_x_curr, delta_y_curr
+                        delta_x_curr, delta_y_curr = x_curr - x_prev, y_curr - y_prev
+                        if abs(x_curr - x_prev2) > 0.075 or \
+                            abs(y_curr - y_prev2) > 0.075:
+                            x_prev2, y_prev2 = x_curr, y_curr
+                            theta = angle(delta_x_curr, delta_y_curr)
+                        print(('{0} @ {1:.0f}%: xmin = {2:.1f}, ' +
+                            'xmax = {3:.1f}, ymin = {4:.1f}, ' +
+                            'ymax = {5:.1f}, center = ({6:.1f}, ' +
+                            '{7:.1f}), theta = {8:.1f}').format(class_name,
+                            score_value * 100, xmin * cap_width,
+                            xmax * cap_width, ymin * cap_height,
+                            ymax * cap_height, center[0] * cap_width,
+                            center[1] * cap_height, theta))
 
             vis_util.visualize_boxes_and_labels_on_image_array(
                 image_np,
@@ -99,7 +136,7 @@ with detection_graph.as_default():
                 np.squeeze(scores),
                 category_index,
                 use_normalized_coordinates=True,
-                min_score_thresh=0.25,
+                min_score_thresh=threshold,
                 agnostic_mode=True,
                 line_thickness=4)
 
