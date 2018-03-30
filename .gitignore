@@ -1,7 +1,8 @@
 *.avi
 *.gz
 *.MOV
-*.pb
+*.old
+*.pb*
 *.png
 *.pyc
 *.record

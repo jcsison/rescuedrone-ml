@@ -42,7 +42,7 @@ from object_detection.utils import label_map_util
 flags = tf.app.flags
 flags.DEFINE_string('data_dir', '', 'Root directory to raw pet dataset.')
 flags.DEFINE_string('output_dir', '', 'Path to directory to output TFRecords.')
-flags.DEFINE_string('label_map_path', 'data/label_map.pbtxt',
+flags.DEFINE_string('label_map_path', 'data/mscoco_label_map.pbtxt',
                     'Path to label map proto')
 FLAGS = flags.FLAGS
 
@@ -57,7 +57,7 @@ def get_class_name_from_filename(file_name):
   Returns:
     A string of the class name.
   """
-  match = re.match(r'([A-Za-z_]+)(-[0-9]+\.png)', file_name, re.I)
+  match = re.match(r'([A-Za-z_]+)(_[0-9]+\.jpg)', file_name, re.I)
   return match.groups()[0]
 
 
@@ -85,13 +85,13 @@ def dict_to_tf_example(data,
   Raises:
     ValueError: if the image pointed to by data['filename'] is not a valid JPEG
   """
-  img_path = os.path.join(image_subdirectory, data['filename'] + '.png')
+  img_path = os.path.join(image_subdirectory, data['filename'])
   with tf.gfile.GFile(img_path, 'rb') as fid:
     encoded_jpg = fid.read()
   encoded_jpg_io = io.BytesIO(encoded_jpg)
   image = PIL.Image.open(encoded_jpg_io)
-  # if image.format != 'JPEG':
-  #   raise ValueError('Image format not JPEG')
+  if image.format != 'JPEG':
+    raise ValueError('Image format not JPEG')
   key = hashlib.sha256(encoded_jpg).hexdigest()
 
   width = int(data['size']['width'])
@@ -117,8 +117,8 @@ def dict_to_tf_example(data,
     ymin.append(float(obj['bndbox']['ymin']) / height)
     xmax.append(float(obj['bndbox']['xmax']) / width)
     ymax.append(float(obj['bndbox']['ymax']) / height)
-    class_name = get_class_name_from_filename(data['filename'] + '.png')
-    print(data['filename'] + '.png')
+    class_name = get_class_name_from_filename(data['filename'])
+    print(data['filename'])
     classes_text.append(class_name.encode('utf8'))
     classes.append(label_map_dict[class_name])
     truncated.append(int(obj['truncated']))
@@ -128,9 +128,9 @@ def dict_to_tf_example(data,
       'image/height': dataset_util.int64_feature(height),
       'image/width': dataset_util.int64_feature(width),
       'image/filename': dataset_util.bytes_feature(
-          (data['filename'] + '.png').encode('utf8')),
+          data['filename'].encode('utf8')),
       'image/source_id': dataset_util.bytes_feature(
-          (data['filename'] + '.png').encode('utf8')),
+          data['filename'].encode('utf8')),
       'image/key/sha256': dataset_util.bytes_feature(key.encode('utf8')),
       'image/encoded': dataset_util.bytes_feature(encoded_jpg),
       'image/format': dataset_util.bytes_feature('jpeg'.encode('utf8')),

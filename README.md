@@ -29,13 +29,13 @@ Start by placing images in `input/images/` and annotations in `input/annotations
 
 ``` bash
 # From input/ directory
-ls images | grep ".png" | sed s/.png// > annotations/trainval.txt
+ls images | grep ".jpg" | sed s/.jpg// > annotations/trainval.txt
 ```
 
 Training records can then be created by running:
 
 ``` bash
-python3 create_tf_record.py --data_dir=data --output_dir=data
+python3 create_tf_record.py --data_dir=input --output_dir=data
 ```
 
 Records will be generated within the `data/` directory.

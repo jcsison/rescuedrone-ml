@@ -399,6 +399,6 @@ item {
   display_name: "toothbrush"
 }
 item {
-  name: 'image'
+  name: "rc"
   id: 91
 }
