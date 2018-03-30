@@ -53,7 +53,7 @@ def detect(video_input=0, show=False, write=False, threshold=0.5):
     MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
     MODEL_FILE = MODEL_NAME + '.tar.gz'
     DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
-    PATH_TO_CKPT =  'data/frozen_inference_graph.pb'
+    PATH_TO_CKPT =  os.path.join('data', 'model', 'frozen_inference_graph.pb')
     PATH_TO_LABELS = os.path.join('data', 'mscoco_label_map.pbtxt')
     NUM_CLASSES = 91
 
@@ -63,9 +63,9 @@ def detect(video_input=0, show=False, write=False, threshold=0.5):
         tar_file = tarfile.open(MODEL_FILE)
         for file in tar_file.getmembers():
             file_name = os.path.basename(file.name)
-            if 'frozen_inference_graph.pb' in file_name:
+            if not file.isdir() and not 'saved_model.pb' in file_name:
                 file.name = file_name
-                tar_file.extract(file, 'data')
+                tar_file.extract(file, os.path.join('data', 'model'))
 
     detection_graph = tf.Graph()
     with detection_graph.as_default():
@@ -163,8 +163,8 @@ def detect(video_input=0, show=False, write=False, threshold=0.5):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage='python3 object_detection_test.py [-f file_path] [-s] [-w] [-t threshold]')
     parser.add_argument('-f', '--file', type=str, default='0', help='Video file path, omit for camera')
-    parser.add_argument('-s', '--show', type=bool, default=False, help='Show video output')
-    parser.add_argument('-w', '--write', type=bool, default=False, help='Write video output to file')
+    parser.add_argument('-s', '--show', action='store_const', const=True, default=False, help='Show video output')
+    parser.add_argument('-w', '--write', action='store_const', const=True, default=False, help='Write video output to file')
     parser.add_argument('-t', '--threshold', type=float, default=0.5, help='Threshold for detection')
     args = parser.parse_args()
 
