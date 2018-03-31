@@ -1,5 +1,4 @@
 *.avi
-*.gz
 *.MOV
 *.old
 *.pb*
@@ -10,6 +9,7 @@
 checkpoint
 trainval.txt
 model.ckpt*
+ssd*.gz
 
 etc/
 input/
