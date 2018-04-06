@@ -25,7 +25,8 @@ import label_map_util
 import visualization_utils as vis_util
 
 def detect(video_input=0, show=False, write=False, threshold=0.5):
-    def angle(x, y):
+    def angle(coord):
+        x, y = coord[0], coord[1]
         if x != 0:
             theta = np.rad2deg(abs(np.arctan(y / x)))
         else:
@@ -48,7 +49,7 @@ def detect(video_input=0, show=False, write=False, threshold=0.5):
     if write:
         out = cv2.VideoWriter('output/output_{:%y%m%d_%H%M%S}.avi'.format(
             datetime.datetime.now()), cv2.VideoWriter_fourcc(*'XVID'), cap.get(5),
-            (cap_width, cap_height))
+            (cap_width // 3, cap_height // 3))
 
     MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
     MODEL_FILE = MODEL_NAME + '.tar.gz'
@@ -92,9 +93,9 @@ def detect(video_input=0, show=False, write=False, threshold=0.5):
         detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
         num_detections = detection_graph.get_tensor_by_name('num_detections:0')
         try:
-            x_curr, y_curr = 0, 0
-            x_prev2, y_prev2 = 0, 0
-            delta_x_curr, delta_y_curr = 0, 0
+            center_curr = np.array([0, 0])
+            center_delta_curr = np.array([0, 0])
+            center_ref = np.array([0, 0])
             theta = 0
             while True:
                 ret, image_np = cap.read()
@@ -102,12 +103,12 @@ def detect(video_input=0, show=False, write=False, threshold=0.5):
                     cap.release()
                     print("Released video source.")
                     break
+                image_np = cv2.resize(image_np, (0, 0), fx=1/3, fy=1/3)
                 image_np_expanded = np.expand_dims(image_np, axis=0)
                 (boxes, scores, classes, num) = sess.run([detection_boxes,
                     detection_scores, detection_classes, num_detections],
                     feed_dict={image_tensor: image_np_expanded})
 
-                # todo: improve angle detection
                 for i in range(min(20, np.squeeze(boxes).shape[0])):
                     class_value = np.squeeze(classes).astype(np.int32)[i]
                     score_value = np.squeeze(scores)[i]
@@ -115,23 +116,17 @@ def detect(video_input=0, show=False, write=False, threshold=0.5):
                         ymin, xmin, ymax, xmax = tuple(np.squeeze(boxes)[i].tolist())
                         class_name = category_index[class_value]['name']
                         if score_value > threshold:
-                            center = ((xmin + xmax) / 2, (ymin + ymax) / 2)
-                            x_prev, y_prev = x_curr, y_curr
-                            x_curr, y_curr = center[0], center[1]
-                            delta_x_prev, delta_y_prev = delta_x_curr, delta_y_curr
-                            delta_x_curr, delta_y_curr = x_curr - x_prev, y_curr - y_prev
-                            if abs(x_curr - x_prev2) > 0.075 or \
-                                abs(y_curr - y_prev2) > 0.075:
-                                x_prev2, y_prev2 = x_curr, y_curr
-                                theta = angle(delta_x_curr, delta_y_curr)
-                            print(('{0} @ {1:.0f}%: xmin = {2:.1f}, ' +
-                                'xmax = {3:.1f}, ymin = {4:.1f}, ' +
-                                'ymax = {5:.1f}, center = ({6:.1f}, ' +
-                                '{7:.1f}), theta = {8:.1f}').format(class_name,
-                                score_value * 100, xmin * cap_width,
-                                xmax * cap_width, ymin * cap_height,
-                                ymax * cap_height, center[0] * cap_width,
-                                center[1] * cap_height, theta))
+                            center = np.array([(xmin + xmax) / 2, (ymin + ymax) / 2])
+                            center_prev = center_curr
+                            center_curr = center
+                            center_delta_prev = center_delta_curr
+                            center_delta_curr = center_curr - center_prev
+                            if np.linalg.norm(center_ref - center) > 0.05:
+                                center_ref = center_curr
+                                theta = angle(center_delta_curr)
+                            print(('{0} @ {1:.5}% | angle: {2:.6} | center: ' +
+                                '({3[0]:.2f}, {3[1]:.2f})').format(class_name,
+                                str(score_value * 100), str(theta), center))
 
                 vis_util.visualize_boxes_and_labels_on_image_array(
                     image_np,
@@ -142,13 +137,13 @@ def detect(video_input=0, show=False, write=False, threshold=0.5):
                     use_normalized_coordinates=True,
                     min_score_thresh=threshold,
                     agnostic_mode=True,
-                    line_thickness=4)
+                    line_thickness=4,
+                    angle=theta)
 
                 if write:
                     out.write(image_np)
 
                 if show:
-                    image_np = cv2.resize(image_np, (800, 600))
                     cv2.imshow('Object Detection', image_np)
 
                 if cv2.waitKey(50) & 0xFF == ord('q'):

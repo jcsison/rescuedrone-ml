@@ -17,7 +17,8 @@ def generate(file_path, save_path='input/images/', class_name='rc', identifier='
         if index % fps == 0:
             if not ret:
                 sys.exit(0)
-            image_path = save_path + '{0}/{1}_{2}{3}{4}'.format(file_name, class_name, identifier, index // fps, '.jpg')
+            frame = cv2.resize(frame, (0, 0), fx=1/3, fx=1/3)
+            image_path = save_path + '{0}/{1}_{2}_{3}.jpg'.format(file_name, class_name, identifier, index // fps)
             cv2.imwrite(image_path, frame)
             print('{0} created'.format(image_path))
         index += 1

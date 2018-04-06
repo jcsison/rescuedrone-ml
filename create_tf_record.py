@@ -57,7 +57,7 @@ def get_class_name_from_filename(file_name):
   Returns:
     A string of the class name.
   """
-  match = re.match(r'([A-Za-z_]+)(_[0-9]+\.jpg)', file_name, re.I)
+  match = re.match(r'([A-Za-z_]+)(_[0-9a-zA-Z_]+\.jpg)', file_name, re.I)
   return match.groups()[0]
 
 
