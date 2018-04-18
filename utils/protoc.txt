@@ -1,0 +1,1 @@
+for %i in (research\object_detection\protos\*.proto) DO protoc %i --python_out=research/

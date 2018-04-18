@@ -394,7 +394,8 @@ def visualize_boxes_and_labels_on_image_array(image,
                                               min_score_thresh=.5,
                                               agnostic_mode=False,
                                               line_thickness=4,
-                                              angle=0):
+                                              angle=0,
+                                              direction=''):
   """Overlay labeled boxes on an image with formatted scores and label names.
 
   This function groups boxes that correspond to the same location
@@ -457,7 +458,7 @@ def visualize_boxes_and_labels_on_image_array(image,
               int(100*scores[i]))
         else:
           if category_index[classes[i]]['name'] == 'rc':
-            display_str = 'angle: {0:.2f}'.format(angle)
+            display_str = 'angle: {0:.2f} ({1})'.format(angle, direction)
           else:
             display_str = 'score: {}%'.format(int(100 * scores[i]))
         box_to_display_str_map[box].append(display_str)
