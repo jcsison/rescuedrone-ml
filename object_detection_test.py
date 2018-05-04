@@ -14,7 +14,6 @@ import tarfile
 import random
 import six.moves.urllib as urllib
 import tensorflow as tf
-import time
 import zipfile
 
 from collections import defaultdict
@@ -45,7 +44,9 @@ class FileVideoStream:
         return self
 
     def update(self):
+        counter = 0
         while True:
+            counter += 1
             if self.stopped:
                 return
             if not self.Q.full():
@@ -53,7 +54,8 @@ class FileVideoStream:
                 if not grabbed:
                     self.stop()
                     return
-                self.Q.put(frame)
+                if counter % 20 == 0:
+                    self.Q.put(frame)
 
     def read(self):
         return self.Q.get()
@@ -113,10 +115,11 @@ def detect(video_input=0, show=False, write=False, threshold=0.5, process=False)
     else:
         fvs = FileVideoStream(video_input).start()
 
-    time.sleep(1.0)
     cap = fvs.get_stream()
     cap_width = int(cap.get(3))
     cap_height = int(cap.get(4))
+
+    ref = (0, 0, 0, 0)
 
     if write:
         out = cv2.VideoWriter('output/output_{:%y%m%d_%H%M%S}.avi'.format(
@@ -128,7 +131,7 @@ def detect(video_input=0, show=False, write=False, threshold=0.5, process=False)
     DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
     PATH_TO_CKPT =  os.path.join('data', 'model', 'frozen_inference_graph.pb')
     PATH_TO_LABELS = os.path.join('data', 'mscoco_label_map.pbtxt')
-    NUM_CLASSES = 91 # todo: change to 1
+    NUM_CLASSES = 1 # todo: change to 1
 
     if not os.path.isfile(PATH_TO_CKPT):
         opener = urllib.request.URLopener()
@@ -158,12 +161,12 @@ def detect(video_input=0, show=False, write=False, threshold=0.5, process=False)
         return np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
 
     with detection_graph.as_default():
-        with tf.Session(graph=detection_graph) as sess:
-            image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
-            detection_boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
-            detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
-            detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
-            num_detections = detection_graph.get_tensor_by_name('num_detections:0')
+      with tf.Session(graph=detection_graph) as sess:
+        image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
+        detection_boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
+        detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
+        detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
+        num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
         try:
             init = False
@@ -178,7 +181,7 @@ def detect(video_input=0, show=False, write=False, threshold=0.5, process=False)
                 image_np = imutils.resize(image_np, width=cap_width//3)
 
                 if not fvs.more():
-                    fvs.release()
+                    fvs.stop()
                     print("Released video source.")
                     break
 
@@ -190,13 +193,13 @@ def detect(video_input=0, show=False, write=False, threshold=0.5, process=False)
                     img_ycrcb = cv2.merge(channels)
                     image_np = cv2.cvtColor(img_ycrcb, cv2.COLOR_YCR_CB2BGR)
                     image_np = cv2.GaussianBlur(image_np, (blur, blur), 0)
-                    (h, w) = image_np.shape[:2]
-                    image_np = cv2.copyMakeBorder(image_np, 500, 500, 500, 500, cv2.BORDER_WRAP)
-                    (h2, w2) = image_np.shape[:2]
-                    image_np = cv2.warpAffine(image_np, cv2.getRotationMatrix2D((w2 / 2, h2 / 2), tilt, 1.0), (w2, h2))
-                    image_np = image_np[int(h2//2 - h//2):int(h2//2 + h/2), int(w2//2 - w/2):int(w2//2 + w/2)]
-                    image_np = cv2.erode(image_np, np.ones((erode, erode)))
-                    image_np = cv2.dilate(image_np, np.ones((dilate, dilate)))
+                    # (h, w) = image_np.shape[:2]
+                    # image_np = cv2.copyMakeBorder(image_np, 500, 500, 500, 500, cv2.BORDER_WRAP)
+                    # (h2, w2) = image_np.shape[:2]
+                    # image_np = cv2.warpAffine(image_np, cv2.getRotationMatrix2D((w2 / 2, h2 / 2), tilt, 1.0), (w2, h2))
+                    # image_np = image_np[int(h2//2 - h//2):int(h2//2 + h/2), int(w2//2 - w/2):int(w2//2 + w/2)]
+                    # image_np = cv2.erode(image_np, np.ones((erode, erode)))
+                    # image_np = cv2.dilate(image_np, np.ones((dilate, dilate)))
 
                 image_np_expanded = np.expand_dims(image_np, axis=0)
                 (boxes, scores, classes, num) = sess.run([detection_boxes,
@@ -224,25 +227,23 @@ def detect(video_input=0, show=False, write=False, threshold=0.5, process=False)
                                 if distance > 0.0625 or not init:
                                     init = True
                                     center_ref = center_curr
+                                    ref = (xmin, xmax, ymin, ymax)
                                     theta = angle(center_delta_curr)
-                                print('{0} @ {1:.5}%'.format(class_name, str(score_value * 100)), end=' | ')
-                                print('angle: {0:.6}'.format(str(theta)), end=' | ')
-                                print('direction: {0:2}'.format(direction(theta)), end=' | ')
-                                print('center: ({0[0]:.2f}, {0[1]:.2f})'.format(center), end=' | ')
-                                print('distance from ref: {0:.6}'.format(str(distance)))
+                                print(('{0} @ {1:.5}% | angle: {2:.6} | direction: {3:2} | center: ({4[0]:.2f}, {4[1]:.2f}) | distance from ref: {5:.6}').format(class_name, str(score_value * 100), str(theta), direction(theta), center, str(distance)))
 
-                vis_util.visualize_boxes_and_labels_on_image_array(
-                    image_np,
-                    np.squeeze(boxes),
-                    np.squeeze(classes).astype(np.int32),
-                    np.squeeze(scores),
-                    category_index,
-                    use_normalized_coordinates=True,
-                    min_score_thresh=threshold,
-                    agnostic_mode=True,
-                    line_thickness=4,
-                    angle=theta,
-                    direction=direction(theta))
+                # vis_util.visualize_boxes_and_labels_on_image_array(
+                #     image_np,
+                #     np.squeeze(boxes),
+                #     np.squeeze(classes).astype(np.int32),
+                #     np.squeeze(scores),
+                #     category_index,
+                #     use_normalized_coordinates=True,
+                #     min_score_thresh=threshold,
+                #     agnostic_mode=True,
+                #     line_thickness=4,
+                #     angle=theta,
+                #     direction=direction(theta))
+                cv2.rectangle(image_np, (int(ref[0] * cap_width // 3), int(ref[2] * cap_height // 3)), (int(ref[1] * cap_width // 3), int(ref[3] * cap_height // 3)), (255, 0, 0), 2)
 
                 if write:
                     out.write(image_np)

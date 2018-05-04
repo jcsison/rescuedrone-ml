@@ -124,6 +124,7 @@ export CHECKPOINT_NUMBER="[CHECKPOINT_NUMBER]"
 Run the following command within the main directory to extract the training model from the storage bucket:
 
 ``` bash
+mkdir $JOB_NAME
 gsutil cp gs://${BUCKET_NAME}/${JOB_NAME}/model.ckpt-${CHECKPOINT_NUMBER}.* $JOB_NAME/
 
 python research/object_detection/export_inference_graph.py \
