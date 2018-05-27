@@ -131,7 +131,7 @@ def detect(video_input=0, show=False, write=False, threshold=0.5, process=False)
     DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
     PATH_TO_CKPT =  os.path.join('data', 'model', 'frozen_inference_graph.pb')
     PATH_TO_LABELS = os.path.join('data', 'mscoco_label_map.pbtxt')
-    NUM_CLASSES = 1 # todo: change to 1
+    NUM_CLASSES = 2
 
     if not os.path.isfile(PATH_TO_CKPT):
         opener = urllib.request.URLopener()
@@ -155,10 +155,6 @@ def detect(video_input=0, show=False, write=False, threshold=0.5, process=False)
     categories = label_map_util.convert_label_map_to_categories(label_map,
         max_num_classes=NUM_CLASSES, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
-
-    def load_image_into_numpy_array(image):
-        (im_width, im_height) = image.size
-        return np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
 
     with detection_graph.as_default():
       with tf.Session(graph=detection_graph) as sess:
@@ -231,18 +227,6 @@ def detect(video_input=0, show=False, write=False, threshold=0.5, process=False)
                                     theta = angle(center_delta_curr)
                                 print(('{0} @ {1:.5}% | angle: {2:.6} | direction: {3:2} | center: ({4[0]:.2f}, {4[1]:.2f}) | distance from ref: {5:.6}').format(class_name, str(score_value * 100), str(theta), direction(theta), center, str(distance)))
 
-                # vis_util.visualize_boxes_and_labels_on_image_array(
-                #     image_np,
-                #     np.squeeze(boxes),
-                #     np.squeeze(classes).astype(np.int32),
-                #     np.squeeze(scores),
-                #     category_index,
-                #     use_normalized_coordinates=True,
-                #     min_score_thresh=threshold,
-                #     agnostic_mode=True,
-                #     line_thickness=4,
-                #     angle=theta,
-                #     direction=direction(theta))
                 cv2.rectangle(image_np, (int(ref[0] * cap_width // 3), int(ref[2] * cap_height // 3)), (int(ref[1] * cap_width // 3), int(ref[3] * cap_height // 3)), (255, 0, 0), 2)
 
                 if write:

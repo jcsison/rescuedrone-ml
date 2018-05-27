@@ -1,4 +1,5 @@
 *.avi
+*.jpg
 *.MOV
 *.old
 *.pb*
@@ -15,6 +16,7 @@ etc/
 input/
 graph_def/
 output/
+rc_ml/
 research/
 research
 ssd*/
