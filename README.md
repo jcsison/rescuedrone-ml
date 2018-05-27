@@ -127,7 +127,7 @@ Run the following command within the main directory to extract the training mode
 mkdir $JOB_NAME
 gsutil cp gs://${BUCKET_NAME}/${JOB_NAME}/model.ckpt-${CHECKPOINT_NUMBER}.* $JOB_NAME/
 
-python research/object_detection/export_inference_graph.py \
+python3 research/object_detection/export_inference_graph.py \
     --input_type image_tensor \
     --pipeline_config_path data/ssd_mobilenet_v1_coco.config \
     --trained_checkpoint_prefix ${JOB_NAME}/model.ckpt-${CHECKPOINT_NUMBER} \

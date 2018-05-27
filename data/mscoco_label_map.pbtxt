@@ -2,3 +2,7 @@ item {
     name: "rc"
     id: 1
 }
+item {
+    name: "person"
+    id: 2
+}

@@ -31,13 +31,17 @@ import logging
 import os
 import random
 import re
+import sys
 
 from lxml import etree
 import PIL.Image
 import tensorflow as tf
 
-from object_detection.utils import dataset_util
-from object_detection.utils import label_map_util
+sys.path.append('research/')
+sys.path.append('research/object_detection/utils/')
+
+import dataset_util
+import label_map_util
 
 flags = tf.app.flags
 flags.DEFINE_string('data_dir', '', 'Root directory to raw pet dataset.')
@@ -121,8 +125,10 @@ def dict_to_tf_example(data,
     print(data['filename'])
     classes_text.append(class_name.encode('utf8'))
     classes.append(label_map_dict[class_name])
-    truncated.append(int(obj['truncated']))
-    poses.append(obj['pose'].encode('utf8'))
+    if 'truncated' in obj.keys():
+        truncated.append(int(obj['truncated']))
+    if 'poses' in obj.keys():
+        poses.append(obj['pose'].encode('utf8'))
 
   example = tf.train.Example(features=tf.train.Features(feature={
       'image/height': dataset_util.int64_feature(height),
